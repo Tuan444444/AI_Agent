@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+pandas
+scikit-learn
+joblib
+langchain-google-genai
+python-dotenv
+openpyxl
