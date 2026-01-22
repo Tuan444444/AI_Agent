@@ -11,11 +11,11 @@ reasoner = ReasoningAgent()
 class RoomInput(BaseModel):
     Quan_huyen: str
     Loai_phong: str
-    Dien_tich: int
+    Dien_tich: float
     Tien_ich_co_ban: str
     Cho_de_xe: str
-    Khoang_cach_TT: int   # <-- Nhập khoảng cách (mét)
-    Gan_truong_DH: int    # <-- Nhập khoảng cách (mét)
+    Khoang_cach_TT: float   # <-- Nhập khoảng cách (mét)
+    Gan_truong_DH: float    # <-- Nhập khoảng cách (mét)
 
 @app.post("/predict")
 async def predict_price(data: RoomInput):
