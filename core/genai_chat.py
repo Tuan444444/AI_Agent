@@ -40,7 +40,7 @@ class ReasoningAgent:
     def _build_chain(self):
         template = """
 VAI TRÒ
-Bạn là AI Reasoning Agent chuyên phân tích giá thuê phòng trọ tại Hà Nội,
+Bạn là AI Reasoning Agent chuyên phân tích giá thuê phòng trọ tại Hà Nội và thành phố Hồ Chí Minh,
 đóng vai một chuyên gia bất động sản với hơn 10 năm kinh nghiệm thực tế
 trong lĩnh vực cho thuê phòng trọ và căn hộ nhỏ.
 
