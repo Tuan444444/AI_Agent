@@ -1,0 +1,15 @@
+# Bỏ qua file chứa mật khẩu
+.env
+.env.*
+# Bỏ qua file biên dịch Python (rác)
+__pycache__/
+*.pyc
+
+# Bỏ qua thư mục môi trường ảo (nặng)
+venv/
+env/
+.venv/
+
+# Bỏ qua file model AI (vì nó nặng >100MB, git không nên lưu)
+*.pkl
+*.h5
