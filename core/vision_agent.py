@@ -26,13 +26,32 @@ class VisionAgent:
         image = Image.open(io.BytesIO(image_bytes))
         
         prompt = """
-        Bạn là chuyên gia Bất động sản. Hãy nhìn ảnh này và trích xuất dữ liệu JSON.
-        Cấu trúc JSON bắt buộc:
+        Đóng vai chuyên gia thẩm định nhà trọ tại Hà Nội. Hãy phân tích bức ảnh này và trích xuất dữ liệu JSON.
+        
+        QUY TẮC QUAN TRỌNG:
+        1. Chỉ trả về JSON thuần, không markdown, không giải thích.
+        2. Các giá trị phải KHỚP CHÍNH XÁC (copy-paste) với danh sách lựa chọn dưới đây. Nếu không chắc, hãy chọn giá trị phổ biến nhất.
+
+        DANH SÁCH LỰA CHỌN HỢP LỆ (Bắt buộc dùng từ ngữ này):
+        - "Loai_hinh": ["Chung cư mini", "Trọ thường", "Căn hộ dịch vụ (Studio)", "Homestay (Sleepbox)"]
+        - "Noi_that": ["Full đồ Luxury (Smart TV, Sofa...)", "Cơ bản (Giường, tủ, nóng lạnh, ĐH)", "Đồ cũ/Thiếu đồ", "Nhà trống"]
+        - "Ban_cong_Cua_so": ["Ban công rộng thoáng", "Cửa sổ kính lớn (Big Window)", "Cửa sổ giếng trời (Nhìn tường)", "Không cửa sổ (Phòng hộp)"]
+        - "Khu_bep": ["Bếp tách biệt (Ngăn mùi)", "Kệ bếp trong phòng", "Nấu ăn chung khu (Tầng 1)"]
+        - "Ve_sinh": ["Khép kín (Có vách kính tắm)", "Khép kín (Cơ bản)", "Vệ sinh chung (Chung tầng)"]
+        
+        LOGIC SUY LUẬN:
+        - Nếu thấy Sofa, Tủ lạnh lớn, Tranh treo tường -> Chọn "Full đồ Luxury (Smart TV, Sofa...)"
+        - Nếu chỉ thấy Giường gỗ, Tủ tôn/gỗ ép -> Chọn "Cơ bản (Giường, tủ, nóng lạnh, ĐH)"
+        - Nếu thấy cửa kính to sát sàn -> Chọn "Ban công rộng thoáng" hoặc "Cửa sổ kính lớn (Big Window)"
+        
+        OUTPUT JSON MẪU:
         {
-            "Loai_phong": "Chọn 1: [Trọ thường, Chung cư mini, Ký túc xá, Căn hộ dịch vụ, Nhà nguyên căn]",
-            "Tien_ich_co_ban": "Chọn 1: [Cơ bản, Đầy đủ, Cao cấp, Thiếu]",
-            "Dien_tich": 25,
-            "Mo_ta": "Mô tả ngắn gọn 1 câu về nội thất"
+            "Mo_ta": "Mô tả ngắn gọn 1 câu về phòng này (VD: Phòng sáng, decor hiện đại...)",
+            "Loai_hinh": "...",
+            "Noi_that": "...",
+            "Ban_cong_Cua_so": "...",
+            "Khu_bep": "...",
+            "Ve_sinh": "..."
         }
         """
 
