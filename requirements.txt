@@ -6,4 +6,5 @@ joblib
 langchain-google-genai
 python-dotenv
 openpyxl
-python-multipart pillow
+python-multipart 
+Pillow
