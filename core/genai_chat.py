@@ -11,7 +11,7 @@ class ReasoningAgent:
         self.llm = None
         if API_KEY:
             self.llm = ChatGoogleGenerativeAI(
-                model="gemini-flash-latest", # Dùng bản flash mới cho nhanh
+                model="gemini-flash-latest", 
                 google_api_key=API_KEY,
                 temperature=0.5
             )

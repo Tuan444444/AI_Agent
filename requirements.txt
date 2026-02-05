@@ -7,3 +7,5 @@ langchain-google-genai
 python-dotenv
 openpyxl
 python-multipart pillow
+#uvicorn main:app --reload
+#streamlit run frontend.py

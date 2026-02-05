@@ -7,12 +7,15 @@ import os
 from dotenv import load_dotenv
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+import csv
+from datetime import datetime
+from core.backend_agent import run_agent_query
 # 1. Load API Key
 load_dotenv()
 api_key = os.getenv("GOOGLE_API_KEY")
 
 if not api_key:
-    print("⚠️ Cảnh báo: Chưa có GOOGLE_API_KEY trong file .env")
+    print(" Cảnh báo: Chưa có GOOGLE_API_KEY trong file .env")
 else:
     genai.configure(api_key=api_key)
 
@@ -20,9 +23,9 @@ else:
 print("⏳ Đang khởi tạo Chat Model...")
 try:
     chat_model = genai.GenerativeModel('gemini-flash-latest')
-    print("✅ Đã khởi tạo: gemini-flash-latest")
+    print(" Đã khởi tạo: gemini-flash-latest")
 except Exception as e:
-    print(f"⚠️ Không load được bản flash-latest, chuyển sang 1.5-flash. Lỗi: {e}")
+    print(f" Không load được bản flash-latest, chuyển sang 1.5-flash. Lỗi: {e}")
     chat_model = genai.GenerativeModel('gemini-1.5-flash')
 
 # 2. Import module Vision
@@ -31,25 +34,25 @@ try:
     vision_available = True
 except ImportError:
     vision_available = False
-    print("⚠️ Cảnh báo: Lỗi import VisionAgent.")
+    print(" Cảnh báo: Lỗi import VisionAgent.")
 
 app = FastAPI()
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):
-    print("🔥 BẮT ĐƯỢC LỖI 422:")
-    print(f"👉 Chi tiết lỗi: {exc.errors()}")  # Nó sẽ in rõ ràng thiếu trường nào
+    print(" BẮT ĐƯỢC LỖI 422:")
+    print(f" Chi tiết lỗi: {exc.errors()}")  
     return JSONResponse(status_code=422, content={"detail": exc.errors()})
 # 3. Khởi tạo các Agent
-# Lưu ý: Class PricePredictor trong ml_model.py cũng phải được cập nhật code mới
+
 predictor = PricePredictor() 
 reasoner = ReasoningAgent()
 if vision_available:
     vision = VisionAgent()
 
-# --- INPUT DATA MODELS (ĐÚNG 15 TRƯỜNG CỦA ULTIMATE DATA) ---
+
 class RoomInput(BaseModel):
-    # Đặt giá trị mặc định cho TẤT CẢ để "miễn nhiễm" với lỗi 422
+ 
     Quan_huyen: str = "Đống Đa"
     Dien_tich: float = 30.0
     Loai_hinh: str = "Trọ thường"
@@ -67,12 +70,10 @@ class RoomInput(BaseModel):
     Khoang_cach_TT: float = 5000.0
     
 class ChatRequest(BaseModel):
-    question: str = ""       # Đặt mặc định là rỗng để không bị lỗi "Field required"
-    context: str = ""        # Đặt mặc định là rỗng
-    history: str = ""
-    text: str = ""
-
-# --- API 1: ĐỊNH GIÁ (ĐÃ SỬA LẠI LOGIC) ---
+    question: str
+    context: str = ""
+    session_id: str
+# --- API 1: ĐỊNH GIÁ  ---
 @app.post("/predict")
 async def predict_price(data: RoomInput):
     print("👉 Nhận request định giá Ultimate...")
@@ -80,8 +81,7 @@ async def predict_price(data: RoomInput):
         # 1. Chuyển đổi dữ liệu từ Pydantic sang Dictionary
         input_dict = data.dict()
         
-        # 2. Gọi Model ML trực tiếp (thay vì gọi qua backend_agent cũ)
-        # Hàm predictor.predict cần nhận dict và trả về số
+        # 2. Gọi Model ML trực tiếp (
         raw_price = predictor.predict(input_dict)
         
         if raw_price == 0:
@@ -94,10 +94,10 @@ async def predict_price(data: RoomInput):
             "explanation": f"Dự đoán dựa trên: {data.Loai_hinh}, {data.Noi_that} tại {data.Quan_huyen}."
         }
     except Exception as e:
-        print(f"❌ Lỗi API Predict: {e}")
+        print(f" Lỗi API Predict: {e}")
         return {"price_formatted": "Lỗi Server", "explanation": str(e)}
 
-# --- API 2: MẮT THẦN (VISION) ---
+# --- API 2: Quét ảnh ---
 @app.post("/analyze-image")
 async def analyze_room_image(file: UploadFile = File(...)):
     if not vision_available:
@@ -111,56 +111,34 @@ async def analyze_room_image(file: UploadFile = File(...)):
         result = vision.analyze_image(image_bytes)
         return result
     except Exception as e:
-        print(f"❌ Lỗi xử lý ảnh: {e}")
+        print(f" Lỗi xử lý ảnh: {e}")
         return {"Mo_ta": f"Lỗi server: {str(e)}"}
 
 
-# Tìm endpoint /chat và thay toàn bộ bằng đoạn này:
 @app.post("/chat")
 async def chat_consultant(req: ChatRequest):
-    if 'chat_model' not in globals():
-        return {"reply": "Lỗi: Chat Model chưa khởi tạo."}
+    print(f"📩 Nhận yêu cầu Chat: {req.question}")
+
+    # 1. Kiểm tra input
+    user_input = req.question if req.question else req.text
+    if not user_input or not user_input.strip():
+        return {"reply": "Bạn chưa nhập câu hỏi nào cả."}
 
     try:
-        # --- LOGIC THÔNG MINH: Tự động ghép nội dung ---
-        # Nếu Frontend gửi 'text' (kiểu cũ), ta dùng nó làm câu hỏi
-        # Nếu Frontend gửi 'question' (kiểu mới), ta dùng question
+        # 2. GỌI AGENT THÔNG MINH (Thay vì Chatbot thường)
+        # req.context: Chứa JSON dữ liệu phòng (bao gồm cả Khoang_cach_TT người dùng nhập)
+        # req.history: Lịch sử chat
         
-        user_input = req.question if req.question else req.text
+        reply_text = run_agent_query(req.question, req.session_id, req.context)
         
-        # Nếu cả 2 đều rỗng -> Báo lỗi nhẹ
-        if not user_input.strip():
-            return {"reply": "Bạn chưa nhập câu hỏi nào cả."}
-
-        # Xây dựng Prompt cho AI
-        prompt = f"""
-        BẠN LÀ: Chuyên gia Bất động sản.
-        
-        --- DỮ LIỆU ĐẦU VÀO ---
-        {req.context}
-        
-        --- CÂU HỎI / YÊU CẦU ---
-        {user_input}
-        
-        --- LỊCH SỬ CHAT ---
-        {req.history}
-        
-          --- YÊU CẦU TRẢ LỜI ---
-
-        1. Trả lời ngắn gọn, đúng trọng tâm câu hỏi mới.
-
-        2. Nếu khách hỏi "Cái đó", "Nó", "Phòng này"... hãy hiểu theo ngữ cảnh trong Lịch sử trò chuyện.
-
-        3. Giọng điệu tư vấn chuyên nghiệp nhưng gần gũi.
-        """
-        
-        response = chat_model.generate_content(prompt)
-        return {"reply": response.text}
+        # 3. Trả về kết quả
+        return {"reply": reply_text}
 
     except Exception as e:
-        print(f"❌ Lỗi Chat: {e}")
-        return {"reply": f"Xin lỗi, server đang bận. Lỗi: {str(e)}"}
-
+        print(f"❌ Lỗi API Chat: {e}")
+        return {"reply": f"Xin lỗi, hệ thống đang bận. Lỗi: {str(e)}"}
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="127.0.0.1", port=8000)
+
+

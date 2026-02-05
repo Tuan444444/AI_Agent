@@ -17,10 +17,10 @@ DISTRICT_FACTOR = {
 # Giá nền theo loại hình
 BASE_PRICE_MAP = {
     "Chung cư mini": 2_800_000, 
-    "Căn hộ dịch vụ (Studio)": 3_500_000, # Studio xịn hơn CCMN
-    "1N1K (1 Khách 1 Ngủ)": 4_000_000,    # Đang hot trend
+    "Căn hộ dịch vụ (Studio)": 3_500_000,
+    "1N1K (1 Khách 1 Ngủ)": 4_000_000,    
     "Trọ thường": 1_500_000,
-    "Homestay (Sleepbox)": 1_200_000      # Giá rẻ nhưng tính theo đầu người
+    "Homestay (Sleepbox)": 1_200_000      
 }
 
 # Nội thất
@@ -31,22 +31,22 @@ INTERIOR_FACTOR = {
     "Nhà trống": 0.9
 }
 
-# Ánh sáng & Thoáng khí (Yếu tố cực quan trọng với người ở)
+# Ánh sáng & Thoáng khí 
 VIEW_FACTOR = {
-    "Ban công rộng thoáng": 1.2,      # Rất đắt giá
+    "Ban công rộng thoáng": 1.2,      
     "Cửa sổ kính lớn (Big Window)": 1.1,
     "Cửa sổ giếng trời (Nhìn tường)": 0.95,
-    "Không cửa sổ (Phòng hộp)": 0.8   # Rất rẻ
+    "Không cửa sổ (Phòng hộp)": 0.8   
 }
 
-# Bếp & Nấu ăn
+# Bếp . Nấu ăn
 KITCHEN_FACTOR = {
     "Bếp tách biệt (Ngăn mùi)": 1.15,
     "Kệ bếp trong phòng": 1.0,
     "Nấu ăn chung khu (Tầng 1)": 0.9
 }
 
-# Vệ sinh (WC)
+# Vệ sinh 
 WC_FACTOR = {
     "Khép kín (Có vách kính tắm)": 1.1, # Sang chảnh
     "Khép kín (Cơ bản)": 1.0,
@@ -69,7 +69,7 @@ ALLEY_FACTOR = {
 }
 
 # Chính sách đặc biệt
-PET_POLICY = {"Cho nuôi Pet": 1.05, "Cấm nuôi Pet": 1.0} # Cho nuôi pet thường đắt hơn chút hoặc cọc cao
+PET_POLICY = {"Cho nuôi Pet": 1.05, "Cấm nuôi Pet": 1.0} 
 
 # ==============================================================================
 # 2. HÀM SINH DỮ LIỆU LOGIC
@@ -109,21 +109,21 @@ def create_ultimate_dataset(num_samples=5000):
         else:
             thang_may = "Không"
 
-        # --- C. TÍNH TOÁN GIÁ (PRICING ENGINE) ---
+        # --- C. TÍNH TOÁN GIÁ  ---
         # 1. Giá sàn diện tích
         unit_price = 100_000 # 100k/m2 trung bình
-        if "Homestay" in loai: unit_price = 0 # Homestay tính theo slot, không tính theo m2 quá gắt
+        if "Homestay" in loai: unit_price = 0 
         
         base_val = BASE_PRICE_MAP[loai] + (dt * unit_price)
         
-        # 2. Hệ số nhân (Multipliers)
-        # Tầng: Thang bộ thì tầng cao rẻ. Thang máy thì tầng cao đắt (view đẹp).
+        # 2. Hệ số nhân 
+       
         f_tang = 1.0
         if thang_may == "Không":
-            if tang_phong == 1: f_tang = 1.1  # Tiện kinh doanh/đi lại
-            elif tang_phong >= 4: f_tang = 0.85 # Leo mệt
+            if tang_phong == 1: f_tang = 1.1  
+            elif tang_phong >= 4: f_tang = 0.85 
         else:
-            if tang_phong >= 6: f_tang = 1.05 # View thoáng
+            if tang_phong >= 6: f_tang = 1.05 
             
         # Tổng hợp hệ số
         total_factor = (
@@ -138,11 +138,11 @@ def create_ultimate_dataset(num_samples=5000):
         kc_tt = random.randint(500, 12000) # mét
         final_price -= (kc_tt / 1000) * 60_000 
         
-        # 4. Phụ phí dịch vụ (Service fees influence choices)
-        # Giả lập giá điện nước để AI học (thường điện kinh doanh 4k thì giá phòng hay rẻ hơn xíu để bù)
+        # 4. Phụ phí dịch vụ 
+        
         gia_dien = random.choice([3500, 3800, 4000, "Giá dân"])
         
-        # 5. Noise & Finalize
+        
         noise = random.uniform(0.95, 1.05)
         final_price = int(final_price * noise)
         if final_price < 1_000_000: final_price = 1_000_000 # Giá sàn
@@ -155,7 +155,7 @@ def create_ultimate_dataset(num_samples=5000):
             final_price                                         # Label
         ])
 
-    # Tạo DataFrame chuẩn
+    # Tạo DataFrame 
     columns = [
         'Quan_huyen', 'Loai_hinh', 'Dien_tich', 'Tong_so_tang', 'Tang_phong', 'Thang_may',
         'Noi_that', 'Ban_cong_Cua_so', 'Khu_bep', 'Ve_sinh', 'May_giat',
@@ -168,8 +168,8 @@ def create_ultimate_dataset(num_samples=5000):
     import os
     if not os.path.exists('data'): os.makedirs('data')
     df.to_csv("data/data2_file.csv", index=False)
-    print("✅ ĐÃ TẠO XONG DATASET BẤT BẠI (ULTIMATE DATASET).")
-    print(f"👉 File saved: data/data2_file.csv | Size: {len(df)} rows")
+    print(" ĐÃ TẠO XONG DATASET BẤT BẠI (ULTIMATE DATASET).")
+    print(f" File saved: data/data2_file.csv | Size: {len(df)} rows")
 
 if __name__ == "__main__":
     create_ultimate_dataset()

@@ -30,6 +30,7 @@ class PricePredictor:
             return 0
         
         try:
+            print("🔍 DEBUG INPUT:", data_dict)
             # 1. Chuyển đổi Dictionary thành DataFrame
             # (Pandas sẽ tự khớp tên cột với tên key trong dict)
             input_df = pd.DataFrame([data_dict])

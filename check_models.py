@@ -13,4 +13,4 @@ try:
         if 'generateContent' in m.supported_generation_methods:
             print(f"✅ {m.name}")
 except Exception as e:
-    print(f"❌ Lỗi Key: {e}")
+    print(f" Lỗi Key: {e}")
